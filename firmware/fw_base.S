@@ -427,9 +427,11 @@ _start_warm:
 	/* Reset all registers for non-boot HARTs */
 	li	ra, 0
 	call	_reset_regs
-
 	/* Disable all interrupts */
 	csrw	CSR_MIE, zero
+	li a1, 0xffffffff
+	csrw 0x306, a1
+	csrw 0x106, a1
 	/*
 	 * Only clear the MIP_SSIP and MIP_STIP. For the platform like QEMU,
 	 * If we clear other interrupts like MIP_SEIP and the pendings of

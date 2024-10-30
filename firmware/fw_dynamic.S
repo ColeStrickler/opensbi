@@ -35,10 +35,16 @@ fw_boot_hart:
 	REG_L	a0, FW_DYNAMIC_INFO_VERSION_OFFSET(a2)
 	bgt	a0, a1, _bad_dynamic_info
 
+	li a1, 0xffffffff
+	csrw 0x306, a1
+	csrw 0x106, a1
+
+
 	/* Read boot HART id */
 	li	a1, FW_DYNAMIC_INFO_VERSION_2
 	blt	a0, a1, 2f
 	REG_L	a0, FW_DYNAMIC_INFO_BOOT_HART_OFFSET(a2)
+	
 	ret
 2:	li	a0, -1
 	ret
