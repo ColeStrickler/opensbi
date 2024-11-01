@@ -117,6 +117,16 @@ static void sbi_boot_print_general(struct sbi_scratch *scratch)
 	/* SBI details */
 	sbi_printf("Runtime SBI Version       : %d.%d\n",
 		   sbi_ecall_version_major(), sbi_ecall_version_minor());
+
+
+	
+	//else
+	//{
+	//	while(1)
+	//	{
+	//		sbi_printf("NO MCOUNTINHIBIT\n");
+	//	}
+	//}
 	sbi_printf("\n");
 }
 
@@ -356,6 +366,43 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	(*init_count)++;
 
 	sbi_hsm_prepare_next_jump(scratch, hartid);
+
+
+	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_10)
+	{
+		csr_write(CSR_MCOUNTEREN, -1);
+		sbi_printf("mcounteren: 0x:%lx\n", csr_read(CSR_MCOUNTEREN));
+	}
+	else
+	{
+		while(1)
+		{
+			sbi_printf("NO MCOUNTEREN\n");
+		}
+	}
+	/* All programmable counters will start running at runtime after S-mode request */
+	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_11)
+	{
+		csr_write(CSR_MCOUNTINHIBIT, 0xFFFFFFF8);
+		sbi_printf("mcountinhibit: 0x%lx\n", csr_read(CSR_MCOUNTINHIBIT));
+	}
+	unsigned long cycles = 0;
+	cycles = csr_read(CSR_CYCLE);
+	sbi_printf("Cycle counter: 0x%lx\n", cycles);
+
+
+	uint16_t mip = csr_read(CSR_MIP);
+	mip &= ~(MIP_SEIP);
+	csr_write(CSR_MIP, mip);
+
+	uint16_t mstat = csr_read(CSR_MSTATUS);
+	mstat |= MSTATUS_SIE;
+	csr_write(CSR_MSTATUS, mstat);
+
+	uint16_t mie = csr_read(CSR_MIE);
+	mie |= (1 << 9); // MIE_SEIE
+	csr_write(CSR_MIE, mie);
+
 	sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
 			     scratch->next_mode, false);
 }

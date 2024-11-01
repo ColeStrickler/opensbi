@@ -60,11 +60,16 @@ static void mstatus_init(struct sbi_scratch *scratch)
 	 * But counters will not run until mcountinhibit is set.
 	 */
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_10)
+	{
 		csr_write(CSR_MCOUNTEREN, -1);
-
+	}
 	/* All programmable counters will start running at runtime after S-mode request */
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_11)
+	{
 		csr_write(CSR_MCOUNTINHIBIT, 0xFFFFFFF8);
+	}
+
+
 
 	/**
 	 * The mhpmeventn[h] CSR should be initialized with interrupt disabled
